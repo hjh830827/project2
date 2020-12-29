@@ -1,7 +1,7 @@
 <template>
   <div v-show="deliveryMethodSelectedFlag && selectedMethod !== ''" class="buyer-info">
     <div class="buyer-tit">
-      <h3 class="tit">배송정보 {{ firstUserAddressFlag }}</h3>
+      <h3 class="tit">배송정보</h3>
       <a v-show="firstUserAddressFlag" href="#none" class="notice" @click.prevent="modifyAddress(true)">
         이 주소가 아닌가요?
       </a>
@@ -28,7 +28,7 @@
             <span class="c-input">
               <span>{{ userAddressInfo.zip }}</span>
               <span>{{ userAddressInfo.basAddr }}</span>
-              <span>{{ userAddressInfo.DtlAddr }}</span>
+              <span>{{ userAddressInfo.dtlAddr }}</span>
             </span>
           </div>
         </div>
@@ -41,7 +41,7 @@
       <li class="buyer-item">
         <span for="_deliveryParcelPhone2" class="title">휴대폰 번호</span>
         <div class="form-group">
-          <span class="c-input"> {{ userAddressInfo }}</span>
+          <span class="c-input"> {{ selectedUserAddressInfo.cellPhone }}</span>
         </div>
       </li>
       <li class="buyer-item">
@@ -49,9 +49,9 @@
         <div class="detail-address">
           <div class="form-group">
             <span class="c-input">
-              <span>15950</span>
-              <span>서울시 중구 123131을지로(을지로 1가)</span>
-              <span>페럼타워 12313114층</span>
+              <span>{{ selectedUserAddressInfo.zip }}</span>
+              <span>{{ selectedUserAddressInfo.basAddr }}</span>
+              <span>{{ selectedUserAddressInfo.dtlAddr }}</span>
             </span>
           </div>
         </div>
@@ -68,14 +68,13 @@
             <span class="c-input">
               <input
                 id="_deliveryParcelPhone"
+                v-model="selectedUserAddressInfo.cellPhone"
                 type="number"
                 placeholder="- 없이 숫자만 입력해주세요"
                 required="required"
                 maxlength="11"
-                value="010-1234-5678"
                 class="input"
                 oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-                @blur="test111"
               />
             </span>
           </div>
@@ -89,7 +88,7 @@
                   type="number"
                   title="우편번호"
                   class="input"
-                  value="12345"
+                  :value="selectedUserAddressInfo.zip"
                   readonly="readonly"
                   required=""
                   pattern="[0-9]*"
@@ -103,7 +102,7 @@
                 <input
                   type="text"
                   title="기본 주소"
-                  value="경기도 광주시 오포읍 신현리"
+                  :value="selectedUserAddressInfo.basAddr"
                   class="input"
                   readonly="readonly"
                   required=""
@@ -113,12 +112,12 @@
             <div class="form-group">
               <span class="c-input">
                 <input
+                  v-model="selectedUserAddressInfo.dtlAddr"
                   type="text"
                   title="나머지 주소"
-                  value="638-3 주원타운 102동 403호"
+                  placeholder="나머지 주소를 입력해주세요."
                   maxlength="50"
                   class="input"
-                  readonly="readonly"
                 />
               </span>
             </div>
@@ -128,12 +127,22 @@
       <button type="button" class="btn-submit" @click.prevent="ConfirmInputForm">확인</button>
     </div>
     <!-- //입력 폼 -->
+    <!-- 우편번호 검색 레이어 팝업 -->
+    <pop-zipcode :open-flag="popupZipcodeFlag" @selectedzipCode="selectedzipCode" />
   </div>
 </template>
 
 <script>
+// API 함수
+import apiMixin from '~/components/mixin/api';
+
+import PopZipcode from '~/components/popup/PopZipcode.vue';
+
 export default {
-  components: {},
+  components: {
+    PopZipcode
+  },
+  mixins: [apiMixin],
   props: {
     selectedMethod: {
       type: String,
@@ -144,14 +153,6 @@ export default {
       type: Boolean,
       required: true,
       default: true
-    },
-    userAddressInfo: {
-      type: Object,
-      required: true
-    },
-    initFirstUserAddressFlag: {
-      type: Boolean,
-      required: true
     }
   },
   data() {
@@ -164,7 +165,17 @@ export default {
 
       // 사용자 전화번호
       userPhoneNumber: '',
-      number: ''
+      number: '',
+      // 초기 청구주소
+      userAddressInfo: {},
+      // 우편번호 팝업 on/off flag
+      popupZipcodeFlag: false,
+      selectedUserAddressInfo: {
+        cellPhone: '',
+        zip: '',
+        basAddr: '',
+        dtlAddr: ''
+      }
     };
   },
   watch: {
@@ -173,15 +184,33 @@ export default {
     }
   },
   created() {},
-  mounted() {},
+  mounted() {
+    this.setUserAddr(); // 청구 정보
+  },
   methods: {
+    // 청구 정보 조회
+    setUserAddr() {
+      this.apiGetUserAddr()
+        .then(res => {
+          this.userAddressInfo = res.data;
+          if (res.data.zip != null) {
+            this.firstUserAddressFlag = true;
+          } else {
+            this.firstUserAddressFlag = false;
+          }
+          // 초기 진입시 메인 화면에 데이터 전달
+          this.$emit('selectUserAddrInfo', this.userAddressInfo);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
     /**
      * 사용자 주소를 수정한다.
      * @function
      * @param {boolean} firstFlag - 처음 받아온 사용자 주소를 수정할 때 true 입력. 그 외에는 값을 입력하지 않는다.
      */
     modifyAddress(firstFlag) {
-      console.log(this.firstUserAddressFlag);
       this.formConfirmedFlag = false;
       this.firstUserAddressFlag = false;
       console.log(this.firstUserAddressFlag);
@@ -195,6 +224,8 @@ export default {
      * @function
      */
     ConfirmInputForm() {
+      // validation 체크 후 데이터 전송
+      this.$emit('selectUserAddrInfo', this.selectedUserAddressInfo);
       this.formConfirmedFlag = true;
     },
 
@@ -203,10 +234,21 @@ export default {
      * @function
      */
     openPopupZipcode() {
-      this.$emit('openPopupZipcode');
+      console.log('test!!!!!!!!!!!!!!!!!');
+      try {
+        // this.$emit('openPopupZipcode', true);
+        this.popupZipcodeFlag = true;
+      } catch (e) {
+        console.log(e);
+      }
     },
-    test111() {
-      console.log('test!!!');
+    /**
+     * 우편검색 팝업에서 선택한 zipcode 전달
+     */
+    selectedzipCode(zipcode) {
+      this.selectedUserAddressInfo.zip = zipcode.zip;
+      this.selectedUserAddressInfo.basAddr = zipcode.newAddr;
+      this.popupZipcodeFlag = false;
     }
   }
 };

@@ -107,11 +107,13 @@ export default {
       if (this.selectZipcode == null) {
         this.selected = false;
         this.addressSelectedFlag = false;
+        alert('주소를 선택해주세요.');
         return;
       }
+      console.log('=======confirmAddress============');
       try {
         // 데이터 전달
-        this.$emit('closePopup');
+        this.$emit('selectedzipCode', this.selectZipcode);
       } catch (e) {
         console.log(e);
       }
@@ -129,6 +131,10 @@ export default {
         this.selectZipcode = null;
       }
     },
+
+    /**
+     * 우편번호 검색
+     */
     searchZipcode(keyword) {
       this.searchFlag = true;
       // 하단 api 이외에 외부 api 가능성 있음.

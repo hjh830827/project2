@@ -35,10 +35,10 @@
 <script>
 export default {
   props: {
-    // eslint-disable-next-line vue/require-default-prop
     selectPrice: {
       type: String,
-      required: false
+      required: false,
+      default: '0'
     },
     completeDisableFlag: {
       type: Boolean,
@@ -48,7 +48,7 @@ export default {
   },
   mounted() {
     console.log('stickyBar mounted');
-    // this.$emit('mounted', this.$refs.stickyBar);
+    this.$emit('mounted', this.$refs.stickyBar);
   },
   methods: {
     onSelectCompleted() {

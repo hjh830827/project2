@@ -15,9 +15,7 @@
       <user-address
         :selected-method="selectedMethod"
         :delivery-method-selected-flag="deliveryMethodSelectedFlag"
-        :user-address-info="userAddressInfo"
-        :init-first-user-address-flag="firstUserAddressFlag"
-        @openPopupZipcode="openPopupZipcode"
+        @selectUserAddrInfo="selectUserAddrInfo"
       />
       <!-- // 사용자 주소 정보 -->
 
@@ -39,16 +37,7 @@ export default {
     UserAddress,
     StoreAddress
   },
-  props: {
-    userAddressInfo: {
-      type: Object,
-      required: true
-    },
-    initFirstUserAddressFlag: {
-      type: Boolean,
-      required: true
-    }
-  },
+  props: {},
   data() {
     return {
       // 바로배송 flag
@@ -62,7 +51,8 @@ export default {
 
       // 배송방법 선택 flag
       deliveryMethodSelectedFlag: true,
-      firstUserAddressFlag: false
+
+      selectedUserAddressInfo: {}
     };
   },
   watch: {
@@ -78,17 +68,12 @@ export default {
           // 바로픽업
           this.deliveryMethodSelectedFlag = false;
         } else {
-          // 그외
-          this.firstUserAddressFlag = this.initFirstUserAddressFlag;
           this.deliveryMethodSelectedFlag = true;
         }
       }
     }
   },
-  async mounted() {
-    console.log('=======productDeliveryselect mounted==========');
-    //
-  },
+  async mounted() {},
   methods: {
     /**
      * 바로도착/행복배송 팝업을 보여준다.
@@ -112,18 +97,12 @@ export default {
     },
 
     /**
-     * 주소 검색 팝업을 보인다.
-     * @function
+     * 주소 정보
      */
-    openPopupZipcode() {
-      this.$emit('openPopupZipcode');
-    },
-    /**
-     * 우편검색 팝업에서 선택한 zipcode 전달
-     */
-    selectedzipCode(zipcode) {
-      console.log('12313131313');
-      console.log(zipcode);
+    selectUserAddrInfo(selectedUserAddressInfo) {
+      console.log('djfkdjfkdjfkdjfkdj');
+      console.log(selectedUserAddressInfo);
+      this.$emit('selectUserAddrInfo', selectedUserAddressInfo);
     }
   }
 };

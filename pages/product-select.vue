@@ -8,7 +8,7 @@
         <div class="seller-detail-header">
           <product-header />
           <!-- key visual -->
-          <product-key-visual />
+          <product-key-visual :image-list="imageList" />
           <a href="#none" class="link-kakako-chat" target="_blank" @click.prevent="openKakaoChat">
             카카오톡 채팅 연결하기
           </a>
@@ -22,10 +22,8 @@
 
         <!-- 배송 가능 방법 -->
         <product-delivery-select
-          :user-address-info="userAddressInfo"
-          :init-first-user-address-flag="firstUserAddressFlag"
+          @selectUserAddrInfo="selectUserAddrInfo"
           @openPopupDelivery="controlPopupDelivery(true)"
-          @openPopupZipcode="controlPopupZipcode(true)"
         />
 
         <!-- 함께 많이 본 휴대폰 -->
@@ -45,9 +43,6 @@
 
     <!-- 바로도착/행복배송 안내 레이어 팝업 -->
     <pop-delivery :open-flag="popupDeliveryFlag" @closePopup="controlPopupDelivery(false)" />
-
-    <!-- 우편번호 검색 레이어 팝업 -->
-    <pop-zipcode :open-flag="popupZipcodeFlag" @closePopup="controlPopupZipcode(false)" />
   </div>
 </template>
 
@@ -66,7 +61,6 @@ import ProductHeader from '~/components/product/ProductHeader.vue';
 import ProductKeyVisual from '~/components/product/ProductKeyVisual.vue';
 import StickyBar from '~/components/product/StickyBar.vue';
 import PopDelivery from '~/components/popup/PopDelivery.vue';
-import PopZipcode from '~/components/popup/PopZipcode.vue';
 
 export default {
   components: {
@@ -79,8 +73,7 @@ export default {
     ProductColorSelect,
     ProductDetailTab,
     StickyBar,
-    PopDelivery,
-    PopZipcode
+    PopDelivery
   },
 
   // SSR 렌더링 전
@@ -104,12 +97,23 @@ export default {
 
       // 바로도착/행복배송 팝업 on/off flag
       popupDeliveryFlag: false,
-
-      // 우편번호 팝업 on/off flag
-      popupZipcodeFlag: false,
+      // 이미지 목록
+      imageList: [
+        {
+          imageUrl: '/images/@/@tmp_iphone-12-pro-max-silver@2x.png'
+        },
+        {
+          imageUrl: '/images/@/@tmp_iphone-12-pro-max-silver@2x.png'
+        },
+        {
+          imageUrl: '/images/@/@tmp_iphone-12-pro-max-silver@2x.png'
+        },
+        {
+          imageUrl: '/images/@/@tmp_iphone-12-pro-max-silver@2x.png'
+        }
+      ],
       // 색상 목록
       colorList: [],
-      // 색상목록 테스트
       // 용량 목록 - api 스펙에 따라 변경 예정
       phoneCapacityList: [
         {
@@ -131,9 +135,8 @@ export default {
       selectColorName: '', // 초기진입시 default 데이터 확인
       selectPrice: '0',
       completeDisableFlag: true,
-      userAddressInfo: {},
-      firstUserAddressFlag: false,
-      orderInfo: {}
+      userAddrInfo: {},
+      productSelectInfo: {}
     };
   },
   watch: {
@@ -160,14 +163,9 @@ export default {
     }
   },
   created() {},
-  /**
-   * 페이지 load 후 조회 데이터
-   */
   async mounted() {
-    console.log('product-select mounted');
     this.setStickyBar();
     this.setProductInfo(); // 상품 정보 조회
-    this.setUserAddr(); // 청구정보
     // 배송 시간
   },
   methods: {
@@ -179,20 +177,7 @@ export default {
         .then(res => {
           this.colorList = res.data;
           // 해당 데이터 기반으로 바로도착/행복배송 안내 정보 조회해야함. 이부분은 api에서 합쳐서 전달할지 문의 p5
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    },
-    setUserAddr() {
-      this.apiGetUserAddr()
-        .then(res => {
-          this.userAddressInfo = res.data;
-          if (res.data.zip != null) {
-            this.firstUserAddressFlag = true;
-          } else {
-            this.firstUserAddressFlag = false;
-          }
+          // 이미지 테스트로 set
         })
         .catch(err => {
           console.log(err);
@@ -265,24 +250,12 @@ export default {
     },
 
     /**
-     * 주소검색 팝업 보이거나 감춤
-     * @function
-     * @param {boolean} flag - true(보임), false(감춤)
-     */
-    controlPopupZipcode(flag) {
-      try {
-        this.popupZipcodeFlag = flag;
-      } catch (e) {
-        console.log(e);
-      }
-    },
-
-    /**
      * 카카오톡 채팅 열기(새창)
      * @function
      */
     openKakaoChat() {
       alert('외부 링크');
+      // window.open = 'http://plus.kakao.com/home/@coolsms';
     },
 
     /**
@@ -291,16 +264,15 @@ export default {
      */
     onSelectCompleted() {
       // 필수 데이터 validation 처리
-      this.$router.push({ name: 'skt-product-select', params: { orderInfo: this.orderInfo } });
+      this.productSelectInfo.test1 = 'test1';
+      this.$router.push({ name: 'skt-product-select', params: { productSelectInfo: this.productSelectInfo } });
     },
 
     /**
      * 색상선택
      */
     selectColor(obj) {
-      console.log('=========selectColor============');
-      console.log(obj);
-      this.orderInfo.selectSeq = obj.colorSeq;
+      this.productSelectInfo.selectSeq = obj.colorSeq;
       this.selectColorName = obj.colorName;
       // 이미지 & 용량 영역도 수정 예정
     },
@@ -308,16 +280,15 @@ export default {
      * 용량 선택
      */
     selectCapacity(data) {
-      // 용량 선택 정보 orderInfo에 set
+      // 용량 선택 정보 productSelectInfo에 set
       this.selectPrice = data;
       this.completeDisableFlag = false;
     },
     /**
-     * 우편검색 팝업에서 선택한 zipcode 전달
+     * 주소 정보
      */
-    selectedzipCode(zipcode) {
-      console.log('dhfkjsdhjfksdjfklaj');
-      console.log(zipcode);
+    selectUserAddrInfo(selectedUserAddressInfo) {
+      this.userAddrInfo = selectedUserAddressInfo;
     }
   },
   head() {

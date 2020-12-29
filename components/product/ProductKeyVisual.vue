@@ -4,9 +4,9 @@
 
     <div v-swiper:mySwiper="options">
       <div class="swiper-wrapper">
-        <div v-for="i in 5" :key="i" class="swiper-slide">
+        <div v-for="(item, index) in imageList" :key="index" class="swiper-slide">
           <div class="img-area">
-            <img src="/images/@/@tmp_iphone-12-pro-max-silver@2x.png" alt="" />
+            <img :src="item.imageUrl" alt="" />
           </div>
         </div>
       </div>
@@ -17,6 +17,13 @@
 
 <script>
 export default {
+  props: {
+    imageList: {
+      type: Array,
+      required: true,
+      default: null
+    }
+  },
   data() {
     return {
       options: {

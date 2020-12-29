@@ -14,11 +14,13 @@
             :id="'productCapacity' + index"
             type="radio"
             name="_productCapacity"
+            :disabled="item.saleCd == '1'"
             @click="selectCapacity(item.productPrice)"
           />
           <label :for="'productCapacity' + index">
             <span class="text">{{ item.phoneCapacity }}</span>
-            <span class="side">₩{{ item.productPrice | comma }}</span>
+            <span v-if="item.saleCd == '1'" class="side">재고 없음</span>
+            <span v-if="item.saleCd != '1'" class="side">₩{{ item.productPrice | comma }}</span>
           </label>
         </span>
       </div>

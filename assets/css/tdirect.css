@@ -21422,19 +21422,19 @@ select::-ms-expand {
   }
 }
 
-@media only screen and (orientation: landscape) {
-  .sticky-bar.active {
-    top: 0;
-  }
+/* @media only screen and (orientation:landscape) {
+	.sticky-bar.active {
+		top: 0
+	}
 
-  .sticky-bar.active .layer-pay {
-    height: 90%;
-  }
+	.sticky-bar.active .layer-pay {
+		height: 90%
+	}
 
-  .sticky-bar.active .layer-pay .body {
-    max-height: 150px;
-  }
-}
+	.sticky-bar.active .layer-pay .body {
+		max-height: 150px
+	}
+} */
 
 @media screen and (orientation: landscape) and (max-height: 414px) {
   .search-detail-area .search-body.filter {
